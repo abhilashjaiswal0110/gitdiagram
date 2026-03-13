@@ -20,6 +20,9 @@ interface MainCardProps {
   onCopy?: () => void;
   lastGenerated?: Date;
   onExportImage?: () => void;
+  onExportSvg?: () => void;
+  onExportMermaidCode?: () => void;
+  onExportMarkdown?: () => void;
   onRegenerate?: () => void;
   zoomingEnabled?: boolean;
   onZoomToggle?: () => void;
@@ -33,6 +36,9 @@ export default function MainCard({
   onCopy,
   lastGenerated,
   onExportImage,
+  onExportSvg,
+  onExportMermaidCode,
+  onExportMarkdown,
   onRegenerate,
   zoomingEnabled,
   onZoomToggle,
@@ -181,6 +187,9 @@ export default function MainCard({
                       onCopy={onCopy!}
                       lastGenerated={lastGenerated!}
                       onExportImage={onExportImage!}
+                      onExportSvg={onExportSvg!}
+                      onExportMermaidCode={onExportMermaidCode!}
+                      onExportMarkdown={onExportMarkdown!}
                       isOpen={true}
                     />
                   )}

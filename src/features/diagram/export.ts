@@ -36,3 +36,29 @@ export function exportMermaidSvgAsPng(svgElement: SVGSVGElement): void {
     "data:image/svg+xml;base64," +
     btoa(unescape(encodeURIComponent(svgData)));
 }
+
+function downloadFile(filename: string, content: string, mimeType: string): void {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.download = filename;
+  anchor.href = url;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
+
+export function exportMermaidSvg(svgElement: SVGSVGElement): void {
+  const svgData = new XMLSerializer().serializeToString(svgElement);
+  downloadFile("diagram.svg", svgData, "image/svg+xml");
+}
+
+export function exportMermaidCode(mermaidCode: string): void {
+  downloadFile("diagram.mmd", mermaidCode, "text/plain");
+}
+
+export function exportMermaidMarkdown(mermaidCode: string): void {
+  const md = `# Repository Diagram\n\n\`\`\`mermaid\n${mermaidCode}\n\`\`\`\n`;
+  downloadFile("diagram.md", md, "text/markdown");
+}

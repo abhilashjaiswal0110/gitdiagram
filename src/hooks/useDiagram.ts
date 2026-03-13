@@ -149,7 +149,13 @@ export function useDiagram(username: string, repo: string) {
     void getDiagram();
   }, [getDiagram]);
 
-  const { handleCopy, handleExportImage } = useDiagramExport(diagram);
+  const {
+    handleCopy,
+    handleExportImage,
+    handleExportSvg,
+    handleExportMermaidCode,
+    handleExportMarkdown,
+  } = useDiagramExport(diagram);
 
   const handleApiKeySubmit = async (apiKey: string) => {
     setShowApiKeyDialog(false);
@@ -187,6 +193,9 @@ export function useDiagram(username: string, repo: string) {
     handleCloseApiKeyDialog,
     handleOpenApiKeyDialog,
     handleExportImage,
+    handleExportSvg,
+    handleExportMermaidCode,
+    handleExportMarkdown,
     handleRegenerate,
     state: state as DiagramStreamState,
   };

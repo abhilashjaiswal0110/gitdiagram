@@ -34,6 +34,9 @@ export default function RepoPageClient({ username, repo }: RepoPageClientProps) 
     handleCloseApiKeyDialog,
     handleOpenApiKeyDialog,
     handleExportImage,
+    handleExportSvg,
+    handleExportMermaidCode,
+    handleExportMarkdown,
     handleRegenerate,
     state,
   } = useDiagram(normalizedUsername, normalizedRepo);
@@ -48,6 +51,9 @@ export default function RepoPageClient({ username, repo }: RepoPageClientProps) 
           onCopy={handleCopy}
           lastGenerated={lastGenerated}
           onExportImage={handleExportImage}
+          onExportSvg={handleExportSvg}
+          onExportMermaidCode={handleExportMermaidCode}
+          onExportMarkdown={handleExportMarkdown}
           onRegenerate={handleRegenerate}
           zoomingEnabled={zoomingEnabled}
           onZoomToggle={() => setZoomingEnabled((prev) => !prev)}
