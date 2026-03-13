@@ -24,6 +24,7 @@ def test_generate_cost_success(monkeypatch):
             default_branch="main",
             file_tree="src/main.py",
             readme="# readme",
+            tech_context="Programming Languages:\n  - Python",
         ),
     )
     monkeypatch.setattr(generate, "get_model", lambda: "gpt-5.2")
@@ -73,15 +74,16 @@ def test_generate_stream_event_order_with_fix_loop(monkeypatch):
             default_branch="main",
             file_tree="src/main.py",
             readme="# readme",
+            tech_context="Programming Languages:\n  - Python",
         ),
     )
     monkeypatch.setattr(generate, "get_model", lambda: "gpt-5.2")
 
-    async def fake_estimate_repo_input_tokens(model, file_tree, readme, api_key=None):
+    async def fake_estimate_repo_input_tokens(model, file_tree, readme, tech_context="", api_key=None):
         return 1000
 
     async def fake_stream_completion(*, model, system_prompt, data, api_key=None, reasoning_effort=None, max_output_tokens=None):
-        if "explaining to a principal" in system_prompt:
+        if "distinguished principal software architect" in system_prompt:
             yield "<explanation>Repo explanation</explanation>"
             return
         if "mapping key components" in system_prompt:

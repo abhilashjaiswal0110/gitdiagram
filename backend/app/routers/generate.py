@@ -88,6 +88,7 @@ async def _estimate_repo_input_tokens(
     model: str,
     file_tree: str,
     readme: str,
+    tech_context: str = "",
     api_key: str | None = None,
 ) -> int:
     try:
@@ -97,6 +98,7 @@ async def _estimate_repo_input_tokens(
             data={
                 "file_tree": file_tree,
                 "readme": readme,
+                "tech_context": tech_context,
             },
             api_key=api_key,
             reasoning_effort="medium",
@@ -126,6 +128,7 @@ async def get_generation_cost(request: Request):
             model=model,
             file_tree=github_data.file_tree,
             readme=github_data.readme,
+            tech_context=github_data.tech_context,
             api_key=parsed.api_key,
         )
         estimated_input_tokens = (
@@ -211,6 +214,7 @@ async def generate_stream(request: Request):
                 model=model,
                 file_tree=github_data.file_tree,
                 readme=github_data.readme,
+                tech_context=github_data.tech_context,
                 api_key=parsed.api_key,
             )
 
@@ -262,6 +266,7 @@ async def generate_stream(request: Request):
                 data={
                     "file_tree": github_data.file_tree,
                     "readme": github_data.readme,
+                    "tech_context": github_data.tech_context,
                 },
                 api_key=parsed.api_key,
                 reasoning_effort="medium",
