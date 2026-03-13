@@ -53,3 +53,6 @@ backend/.venv
 
 # vscode
 .vscode/
+
+# Playwright MCP screenshots
+.playwright-mcp/

@@ -14,7 +14,7 @@ You can also replace `hub` with `diagram` in any Github URL to access its diagra
 - 👀 **Instant Visualization**: Convert any GitHub repository structure into a system design / architecture diagram
 - 🎨 **Interactivity**: Click on components to navigate directly to source files and relevant directories
 - ⚡ **Fast Generation**: Powered by OpenAI GPT-5.2 (configurable) for quick and accurate diagrams
-- 🖼️ **Export Options**: Copy Mermaid code or download the generated diagram as PNG
+- 🖼️ **Export Options**: Download diagrams as PNG, SVG, Mermaid code (.mmd), or Markdown (.md), and copy Mermaid code to clipboard
 - 🌐 **API Access**: Public API available for integration (WIP)
 
 ## ⚙️ Tech Stack
@@ -55,75 +55,123 @@ You can also self-host this app locally (backend separated as well!) with the st
 
 ## 🛠️ Self-hosting / Local Development
 
-1. Clone the repository
+### Prerequisites
+
+| Tool | Version | Check |
+|------|---------|-------|
+| Node.js | 22.x | `node -v` |
+| pnpm | 9.13.x | `pnpm -v` |
+| Python | 3.12.x | `python --version` |
+| uv | 0.5.24+ | `uv --version` |
+| Docker | latest | `docker --version` |
+
+### Step 1 — Clone and install
 
 ```bash
 git clone https://github.com/ahmedkhaleel2004/gitdiagram.git
 cd gitdiagram
+pnpm install
 ```
 
-2. Install dependencies
+### Step 2 — Backend Python dependencies
 
 ```bash
-pnpm i
+cd backend
+uv sync --no-install-project   # creates backend/.venv with pinned deps
+cd ..
 ```
 
-3. Set up environment variables (create .env)
+### Step 3 — Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-Then edit the `.env` file with your OpenAI API key and optional GitHub personal access token.
+Edit `.env` and set at minimum:
 
-4. Start local database
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `POSTGRES_URL` | Yes | PostgreSQL connection string (local: `postgresql://postgres:password@localhost:5432/gitdiagram`) |
+| `OPENAI_API_KEY` | Yes | OpenAI API key for diagram generation |
+| `OPENAI_MODEL` | No | Model for all generation stages (default: `gpt-5.2`) |
+| `GITHUB_PAT` | No | GitHub personal access token (avoids rate limits, enables private repos) |
+| `NEXT_PUBLIC_USE_LEGACY_BACKEND` | No | Set `true` to route generation to FastAPI backend |
+| `NEXT_PUBLIC_API_DEV_URL` | No | FastAPI backend URL (e.g. `http://localhost:8000`) |
+
+### Step 4 — Start the database
 
 ```bash
 chmod +x start-database.sh
-./start-database.sh
+./start-database.sh          # creates a Postgres container at localhost:5432
+pnpm db:push                 # push the schema
 ```
 
-When prompted to generate a random password, input yes.
-The Postgres database will start in a container at `localhost:5432`
+> On Windows, run in WSL or Git Bash. You can also use any existing Postgres instance — just update `POSTGRES_URL`.
 
-5. Initialize the database schema
+You can view and interact with the database using `pnpm db:studio`.
+
+### Step 5 — Start the application
+
+**Frontend only** (uses Next.js route handlers for generation):
 
 ```bash
-pnpm db:push
+pnpm dev                     # → http://localhost:3000
 ```
 
-You can view and interact with the database using `pnpm db:studio`
-
-6. Run frontend
+**Frontend + FastAPI backend** (recommended for production parity):
 
 ```bash
+# Terminal 1 — backend
+docker-compose up --build -d
+docker-compose logs -f api   # verify it starts on :8000
+
+# Terminal 2 — frontend
 pnpm dev
 ```
 
-You can now access the website at `localhost:3000`.
-
-Run FastAPI backend (recommended if you want parity with production):
-
-```bash
-docker-compose up --build -d
-docker-compose logs -f api
+Then set in `.env`:
+```
+NEXT_PUBLIC_USE_LEGACY_BACKEND=true
+NEXT_PUBLIC_API_DEV_URL=http://localhost:8000
 ```
 
-To route frontend calls to the external backend, set:
-- `NEXT_PUBLIC_USE_LEGACY_BACKEND=true`
-- `NEXT_PUBLIC_API_DEV_URL=http://localhost:8000`
-
-For a full machine setup guide (Node/Python/uv versions + verification), see `docs/dev-setup.md`.
-
-Quick validation:
-
+Alternatively, start the backend without Docker:
 ```bash
-pnpm check
-pnpm test
-pnpm build
+pnpm dev:backend             # runs uvicorn via uv
 ```
 
-Railway backend docs: `docs/railway-backend.md`.
+### Step 6 — Verify everything works
+
+```bash
+pnpm check                   # TypeScript type-check + ESLint
+pnpm test                    # Vitest frontend tests
+pnpm build                   # Next.js production build
+```
+
+Backend checks:
+```bash
+cd backend
+uv run pytest -q             # backend tests
+uv run python -m compileall app
+cd ..
+```
+
+### Step 7 — Generate a diagram
+
+1. Open `http://localhost:3000` in your browser
+2. Paste any GitHub repository URL (e.g. `https://github.com/ahmedkhaleel2004/gitdiagram`)
+3. Click **Diagram** — the 3-stage LLM pipeline will stream progress
+4. Once complete, click **Export Diagram** to:
+   - **Download PNG** — high-resolution raster image
+   - **Download SVG** — scalable vector graphic
+   - **Download Mermaid** — raw `.mmd` source file
+   - **Download MD** — Markdown with embedded mermaid block
+   - **Copy Mermaid.js Code** — to clipboard
+5. Toggle **Enable Zoom** for pan & zoom on large diagrams
+6. Click any component in the diagram to navigate to source files
+
+For a full machine setup guide, see [`docs/dev-setup.md`](docs/dev-setup.md).
+Railway backend docs: [`docs/railway-backend.md`](docs/railway-backend.md).
 
 ## Contributing
 
