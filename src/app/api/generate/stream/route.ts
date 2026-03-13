@@ -36,6 +36,7 @@ async function estimateRepoTokenCount(
   model: string,
   fileTree: string,
   readme: string,
+  techContext?: string,
   apiKey?: string,
 ) {
   try {
@@ -45,6 +46,7 @@ async function estimateRepoTokenCount(
       userPrompt: toTaggedMessage({
         file_tree: fileTree,
         readme,
+        ...(techContext ? { tech_context: techContext } : {}),
       }),
       apiKey,
       reasoningEffort: "medium",
@@ -86,6 +88,7 @@ export async function POST(request: Request) {
             model,
             githubData.fileTree,
             githubData.readme,
+            githubData.techContext,
             apiKey,
           );
 
@@ -133,6 +136,7 @@ export async function POST(request: Request) {
             userPrompt: toTaggedMessage({
               file_tree: githubData.fileTree,
               readme: githubData.readme,
+              tech_context: githubData.techContext,
             }),
             apiKey,
             reasoningEffort: "medium",
