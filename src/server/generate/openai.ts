@@ -27,15 +27,6 @@ function getAzureConfig(): AzureConfig | null {
   };
 }
 
-/**
- * Use Azure when all Azure env vars are set AND the caller did not supply
- * their own openai key override (a user-supplied key implies vanilla OpenAI).
- */
-function shouldUseAzure(overrideApiKey?: string): boolean {
-  if (overrideApiKey?.trim()) return false;
-  return getAzureConfig() !== null;
-}
-
 function isReasoningModel(deployment: string): boolean {
   return /^o[134]/i.test(deployment);
 }
@@ -84,37 +75,36 @@ export async function* streamCompletion({
   reasoningEffort,
   maxOutputTokens,
 }: StreamCompletionParams): AsyncGenerator<string, void, void> {
-  const azure = getAzureConfig();
+  // Use Azure only when configured AND the caller did not supply their own key
+  // (a user-supplied key always implies vanilla OpenAI).
+  const azure = apiKey?.trim() ? null : getAzureConfig();
 
-  if (shouldUseAzure(apiKey)) {
+  if (azure) {
     // ------------------------------------------------------------------
     // Azure OpenAI — Chat Completions API
     // ------------------------------------------------------------------
     const client = new AzureOpenAI({
-      apiKey: azure!.apiKey,
-      endpoint: azure!.endpoint,
-      deployment: azure!.deployment,
-      apiVersion: azure!.apiVersion,
+      apiKey: azure.apiKey,
+      endpoint: azure.endpoint,
+      deployment: azure.deployment,
+      apiVersion: azure.apiVersion,
     });
 
-    type ChatParams = Parameters<typeof client.chat.completions.create>[0] & {
-      reasoning_effort?: ReasoningEffort;
-    };
-    const params: ChatParams = {
-      model: azure!.deployment,
+    // Use `stream: true as const` so TypeScript narrows the return type to
+    // Stream<ChatCompletionChunk> instead of the union type.
+    const stream = await client.chat.completions.create({
+      model: azure.deployment,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      stream: true,
-    };
-    if (maxOutputTokens) params.max_tokens = maxOutputTokens;
-    // reasoning_effort is supported by o-series models on Azure
-    if (reasoningEffort && isReasoningModel(azure!.deployment)) {
-      params.reasoning_effort = reasoningEffort;
-    }
+      stream: true as const,
+      ...(maxOutputTokens ? { max_tokens: maxOutputTokens } : {}),
+      ...(reasoningEffort && isReasoningModel(azure.deployment)
+        ? { reasoning_effort: reasoningEffort }
+        : {}),
+    });
 
-    const stream = await client.chat.completions.create(params);
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content;
       if (delta) yield delta;
@@ -172,9 +162,10 @@ export async function countInputTokens({
   apiKey,
   reasoningEffort,
 }: CountInputTokensParams): Promise<number> {
-  if (shouldUseAzure(apiKey)) {
+  const azure = apiKey?.trim() ? null : getAzureConfig();
+  if (azure) {
     // Azure Chat Completions has no dedicated token-count endpoint;
-    // fall back to the length heuristic (same as the error path below).
+    // fall back to the length heuristic.
     return estimateTokens(systemPrompt + userPrompt);
   }
 
