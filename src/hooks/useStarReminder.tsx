@@ -17,7 +17,7 @@ export function useStarReminder() {
             label: "Star ★",
             onClick: () =>
               window.open(
-                "https://github.com/ahmedkhaleel2004/gitdiagram",
+                "https://github.com/abhilashjaiswal/gitdiagram",
                 "_blank",
               ),
           },

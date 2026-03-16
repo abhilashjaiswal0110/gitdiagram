@@ -71,7 +71,7 @@ export function PrivateReposDialog({
                 (not that I would use it for anything anyways). You can also
                 self-host this app by following the instructions in the{" "}
                 <Link
-                  href="https://github.com/ahmedkhaleel2004/gitdiagram"
+                  href="https://github.com/abhilashjaiswal/gitdiagram"
                   className="neo-link"
                 >
                   README

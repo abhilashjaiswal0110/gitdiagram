@@ -71,7 +71,7 @@ export function HeaderClient({ starCount }: HeaderClientProps) {
           </button>
           <ThemeToggle />
           <Link
-            href="https://github.com/ahmedkhaleel2004/gitdiagram"
+            href="https://github.com/abhilashjaiswal/gitdiagram"
             className="flex items-center gap-1 text-sm font-medium text-black transition-transform hover:translate-y-[-2px] hover:text-purple-600 dark:text-neutral-200 dark:hover:text-[hsl(var(--neo-link-hover))] sm:gap-2"
           >
             <FaGithub className="h-5 w-5" />

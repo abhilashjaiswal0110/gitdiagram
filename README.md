@@ -1,7 +1,7 @@
 [![Image](./docs/readme_img.png "GitDiagram Front Page")](https://gitdiagram.com/)
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-[![Kofi](https://img.shields.io/badge/Kofi-F16061.svg?logo=ko-fi&logoColor=white)](https://ko-fi.com/ahmedkhaleel2004)
+[![Kofi](https://img.shields.io/badge/Kofi-F16061.svg?logo=ko-fi&logoColor=white)](https://ko-fi.com/abhilashjaiswal)
 
 # GitDiagram
 
@@ -68,7 +68,7 @@ You can also self-host this app locally (backend separated as well!) with the st
 ### Step 1 — Clone and install
 
 ```bash
-git clone https://github.com/ahmedkhaleel2004/gitdiagram.git
+git clone https://github.com/abhilashjaiswal/gitdiagram.git
 cd gitdiagram
 pnpm install
 ```
@@ -159,7 +159,7 @@ cd ..
 ### Step 7 — Generate a diagram
 
 1. Open `http://localhost:3000` in your browser
-2. Paste any GitHub repository URL (e.g. `https://github.com/ahmedkhaleel2004/gitdiagram`)
+2. Paste any GitHub repository URL (e.g. `https://github.com/abhilashjaiswal/gitdiagram`)
 3. Click **Diagram** — the 3-stage LLM pipeline will stream progress
 4. Once complete, click **Export Diagram** to:
    - **Download PNG** — high-resolution raster image
