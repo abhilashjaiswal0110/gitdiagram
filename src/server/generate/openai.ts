@@ -1,6 +1,48 @@
-import OpenAI from "openai";
+import OpenAI, { AzureOpenAI } from "openai";
 
 export type ReasoningEffort = "low" | "medium" | "high";
+
+// ---------------------------------------------------------------------------
+// Azure OpenAI configuration helpers
+// ---------------------------------------------------------------------------
+
+interface AzureConfig {
+  apiKey: string;
+  endpoint: string;
+  deployment: string;
+  apiVersion: string;
+}
+
+function getAzureConfig(): AzureConfig | null {
+  const apiKey = process.env.AZURE_OPENAI_API_KEY?.trim();
+  const endpoint = process.env.AZURE_OPENAI_ENDPOINT?.trim();
+  const deployment = process.env.AZURE_OPENAI_DEPLOYMENT?.trim();
+  if (!apiKey || !endpoint || !deployment) return null;
+  return {
+    apiKey,
+    endpoint,
+    deployment,
+    apiVersion:
+      process.env.AZURE_OPENAI_API_VERSION?.trim() ?? "2025-01-01-preview",
+  };
+}
+
+/**
+ * Use Azure when all Azure env vars are set AND the caller did not supply
+ * their own openai key override (a user-supplied key implies vanilla OpenAI).
+ */
+function shouldUseAzure(overrideApiKey?: string): boolean {
+  if (overrideApiKey?.trim()) return false;
+  return getAzureConfig() !== null;
+}
+
+function isReasoningModel(deployment: string): boolean {
+  return /^o[134]/i.test(deployment);
+}
+
+// ---------------------------------------------------------------------------
+// Vanilla OpenAI key resolver (backup path)
+// ---------------------------------------------------------------------------
 
 function resolveApiKey(overrideApiKey?: string): string {
   const apiKey = overrideApiKey?.trim() || process.env.OPENAI_API_KEY?.trim();
@@ -12,10 +54,18 @@ function resolveApiKey(overrideApiKey?: string): string {
   return apiKey;
 }
 
+// ---------------------------------------------------------------------------
+// Token estimation helpers
+// ---------------------------------------------------------------------------
+
 export function estimateTokens(text: string): number {
   // Rough heuristic used for fast gating/cost estimates in serverless.
   return Math.ceil(text.length / 4);
 }
+
+// ---------------------------------------------------------------------------
+// Streaming
+// ---------------------------------------------------------------------------
 
 interface StreamCompletionParams {
   model: string;
@@ -34,6 +84,47 @@ export async function* streamCompletion({
   reasoningEffort,
   maxOutputTokens,
 }: StreamCompletionParams): AsyncGenerator<string, void, void> {
+  const azure = getAzureConfig();
+
+  if (shouldUseAzure(apiKey)) {
+    // ------------------------------------------------------------------
+    // Azure OpenAI — Chat Completions API
+    // ------------------------------------------------------------------
+    const client = new AzureOpenAI({
+      apiKey: azure!.apiKey,
+      endpoint: azure!.endpoint,
+      deployment: azure!.deployment,
+      apiVersion: azure!.apiVersion,
+    });
+
+    type ChatParams = Parameters<typeof client.chat.completions.create>[0] & {
+      reasoning_effort?: ReasoningEffort;
+    };
+    const params: ChatParams = {
+      model: azure!.deployment,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      stream: true,
+    };
+    if (maxOutputTokens) params.max_tokens = maxOutputTokens;
+    // reasoning_effort is supported by o-series models on Azure
+    if (reasoningEffort && isReasoningModel(azure!.deployment)) {
+      params.reasoning_effort = reasoningEffort;
+    }
+
+    const stream = await client.chat.completions.create(params);
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content;
+      if (delta) yield delta;
+    }
+    return;
+  }
+
+  // ------------------------------------------------------------------
+  // Vanilla OpenAI — Responses API (backup)
+  // ------------------------------------------------------------------
   const client = new OpenAI({ apiKey: resolveApiKey(apiKey) });
 
   const stream = await client.responses.create({
@@ -62,6 +153,10 @@ export async function* streamCompletion({
   }
 }
 
+// ---------------------------------------------------------------------------
+// Token counting
+// ---------------------------------------------------------------------------
+
 interface CountInputTokensParams {
   model: string;
   systemPrompt: string;
@@ -77,6 +172,13 @@ export async function countInputTokens({
   apiKey,
   reasoningEffort,
 }: CountInputTokensParams): Promise<number> {
+  if (shouldUseAzure(apiKey)) {
+    // Azure Chat Completions has no dedicated token-count endpoint;
+    // fall back to the length heuristic (same as the error path below).
+    return estimateTokens(systemPrompt + userPrompt);
+  }
+
+  // Vanilla OpenAI — Responses input-tokens API (backup)
   const client = new OpenAI({ apiKey: resolveApiKey(apiKey) });
 
   const response = await client.responses.inputTokens.count({
