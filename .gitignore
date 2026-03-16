@@ -48,6 +48,9 @@ yarn-error.log*
 
 __pycache__/
 venv
+
+# snapshot screenshots
+/snapshot/
 backend/.venv
 .venv
 

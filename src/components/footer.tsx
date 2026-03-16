@@ -8,10 +8,10 @@ export function Footer() {
         <span className="text-sm font-medium text-black dark:text-neutral-100">
           Made by{" "}
           <Link
-            href="https://ahmedkhaleel.com"
+            href="https://github.com/abhilashjaiswal"
             className="neo-link hover:underline"
           >
-            Ahmed Khaleel
+            Abhilash Jaiswal
           </Link>
         </span>
       </div>

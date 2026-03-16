@@ -5,7 +5,7 @@ interface GitHubRepoResponse {
 }
 
 const GITHUB_REPO_URL =
-  "https://api.github.com/repos/ahmedkhaleel2004/gitdiagram";
+  "https://api.github.com/repos/abhilashjaiswal/gitdiagram";
 const GITHUB_API_VERSION = "2022-11-28";
 const STAR_COUNT_REVALIDATE_SECONDS = 60 * 30;
 
