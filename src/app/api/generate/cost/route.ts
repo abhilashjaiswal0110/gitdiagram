@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       github_pat: githubPat,
     } = parsed.data;
     const githubData = await getGithubData(username, repo, githubPat);
-    const model = getModel();
+    const model = getModel(apiKey);
 
     const baseInputTokens = await estimateRepoInputTokens(
       model,

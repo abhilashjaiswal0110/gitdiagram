@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       const run = async () => {
         try {
           const githubData = await getGithubData(username, repo, githubPat);
-          const model = getModel();
+          const model = getModel(apiKey);
           const tokenCount = await estimateRepoTokenCount(
             model,
             githubData.fileTree,
